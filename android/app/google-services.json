@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1011295888314",
+    "project_id": "attendsync-2b924",
+    "storage_bucket": "attendsync-2b924.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011295888314:android:e64935d062b5bdcaf4f383",
+        "android_client_info": {
+          "package_name": "com.attendsync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNeHvXLowTTX4RJ6SvDjtrvl-ofOF48DQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
