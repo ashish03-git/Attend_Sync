@@ -8,9 +8,11 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import database from '@react-native-firebase/database';
+import database, {firebase} from '@react-native-firebase/database';
+import firestore from '@react-native-firebase/firestore';
+import useCollectionLength from '../Hook/useCollectionLength';
 
-const Firebase = () => {
+const FireStore = () => {
   //   const [value, setValue] = useState('');
   const [name, setName] = useState(null);
   const [id, setId] = useState(null);
@@ -21,42 +23,50 @@ const Firebase = () => {
   const [allEmployees, setAllEmployees] = useState([]);
   const [isListVisible, setIsListVisible] = useState(false);
   const [isUpdateVisible, setIsUpdateVisible] = useState(false);
+  const length = useCollectionLength();
 
   useEffect(() => {
     getAllValues();
+    // console.log(length);
   }, []);
 
-  const AddValue = () => {
+  const AddValue = async () => {
+
+    // this code will enter the new date data into the array of attendance app
     let details = {
-      id: id,
-      name: name,
       date: date,
       check_in: checkIn,
       check_out: checkOut,
       work_hours: workHours,
     };
-    database()
-      .ref(`/employees/${id}`)
-      .set(details)
-      .then(() => {
-        console.log('Data is stored successfully ');
-        setCheckOut('');
-        setName(''), setId('');
-        setCheckIn('');
-        setWorkHours('');
-        setDate('');
-      });
-
-    getAllValues();
+    await firestore()
+      .collection('employees')
+      .doc('4')
+      .update({
+        attendance_record: firebase.firestore.FieldValue.arrayUnion(details),
+      })
+      .then(() => console.log('data added into array'));
   };
 
+  // to get data present in the firestore
   const getAllValues = async () => {
-    const data = (await database().ref('employees').once('value')).val();
-    if (data) {
-      let allEmployeesData = Object.keys(data).map(key => data[key]);
-      setAllEmployees(allEmployeesData);
-    }
+
+
+    // method 1 - it is to read data available in firestore
+    // const data = await firestore()
+    //   .collection('employees')
+    //   .onSnapshot(snap => {
+    //     snap.forEach(employee => {
+    //       allEmployees.push(employee.data());
+    //     });
+    //     // console.log(allEmployees)
+    //   });
+
+    // method 2 - it is to read data available in firestore
+    const data = await firestore().collection('employees').get();
+    data.forEach(item => allEmployees.push(item.data()));
   };
+  // console.log(allEmployees);
 
   const handleEdit = async item => {
     setIsUpdateVisible(true);
@@ -124,7 +134,7 @@ const Firebase = () => {
   return (
     <ScrollView style={{flex: 1}}>
       <Text style={{alignSelf: 'center', fontSize: 30, color: 'black'}}>
-        TO-DO App(Firebase)
+        Fire Store CURD
       </Text>
 
       <View style={{flex: 2, alignItems: 'center', paddingVertical: 40}}>
@@ -238,7 +248,8 @@ const Firebase = () => {
             alignItems: 'center',
           }}>
           <TouchableOpacity
-            onPress={isUpdateVisible ? UpdateData : AddValue}
+            // isUpdateVisible
+            onPress={false ? UpdateData : AddValue}
             style={{
               margin: 10,
               width: 160,
@@ -358,4 +369,4 @@ const Firebase = () => {
   );
 };
 
-export default Firebase;
+export default FireStore;
