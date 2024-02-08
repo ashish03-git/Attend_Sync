@@ -10,13 +10,12 @@ import React, {useEffect, useState} from 'react';
 import styles from './styles';
 import {useNavigation} from '@react-navigation/native';
 import firestore, {firebase} from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
-import Font from 'react-native-vector-icons/FontAwesome';
 import LogOut from 'react-native-vector-icons/AntDesign';
-import DropDownPicker from 'react-native-dropdown-picker';
 import {useSelector} from 'react-redux';
 import useGetAttenanceRecord from '../Hook/useGetAttenanceRecord';
 import Font5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialCommunityIcone from 'react-native-vector-icons/MaterialCommunityIcons';
+
 const Profile = () => {
   const navigation = useNavigation();
   const handleLogOut = async () => {
@@ -27,9 +26,9 @@ const Profile = () => {
 
   const uid = 'KROwXP2g9peVWDIoqRucTQnI60A3';
   const [users_attendance_record, setUsers_attendance_record] = useState([]);
-  const storedReduxUserDataID = useSelector(state => state.user_data.data.id);
+  const storedReduxUserData = useSelector(state => state.user_data.data);
 
-  const data = useGetAttenanceRecord(storedReduxUserDataID);
+  const data = useGetAttenanceRecord(storedReduxUserData.id);
   setTimeout(() => {
     if (typeof data === 'object') {
       setUsers_attendance_record(data);
@@ -53,7 +52,7 @@ const Profile = () => {
         <View style={{flex: 1, alignItems: 'flex-end'}}>
           <TouchableOpacity onPress={handleLogOut} style={styles.logOutBtn}>
             {/* <Text style={styles.viewListTxt}>Log Out</Text> */}
-            <LogOut name="logout" size={30} color={"white"}/>
+            <LogOut name="logout" size={22} color={'white'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -69,10 +68,10 @@ const Profile = () => {
         </View>
         <View style={{alignItems: 'center'}}>
           <Text style={{fontSize: 26, fontWeight: '500', margin: 5}}>
-            Ashish
+            {storedReduxUserData.name}
           </Text>
           <Text style={{fontSize: 22, fontWeight: '500', margin: 5}}>
-            ashish@gmail.com
+            {storedReduxUserData.email}
           </Text>
         </View>
       </View>
@@ -138,7 +137,10 @@ const Profile = () => {
             </>
           ) : (
             <>
-              <Text style={styles.noDataTxt}>{msg}</Text>
+              <MaterialCommunityIcone name="note-off" size={50} color={'red'} />
+              <Text style={styles.noDataTxt}>
+                No Record Found For Current Month
+              </Text>
             </>
           )}
         </View>

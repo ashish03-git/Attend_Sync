@@ -112,6 +112,11 @@ const styles = StyleSheet.create({
     color: 'orange',
     fontWeight: 'bold',
   },
+  noDataTxt: {
+    fontSize: 18,
+    color: 'red',
+    fontWeight: '600',
+  },
 });
 
 export default styles;

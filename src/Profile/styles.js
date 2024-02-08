@@ -47,9 +47,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logOutBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',

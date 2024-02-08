@@ -8,6 +8,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import auth from '@react-native-firebase/auth';
@@ -26,13 +27,16 @@ const SignUp = () => {
   const navigation = useNavigation();
   const length = useCollectionLength();
 
+
   const handleSignUp = async () => {
     try {
       const signUpStatus = await auth().createUserWithEmailAndPassword(
         email,
         password,
       );
+      await signUpStatus.user.sendEmailVerification()
       await createUserInFireStore(signUpStatus.user.uid);
+       Alert.alert('Verification Email Sent', 'Please check your email to verify your account.');
     } catch (error) {
       Alert.alert(
         'Registration failed',
@@ -44,12 +48,15 @@ const SignUp = () => {
   };
 
   const createUserInFireStore = async uid => {
+    const currentDate = new Date()
+    const year = currentDate.getFullYear()
+    const month = currentDate.toLocaleString("default",{month:"long"}).toLowerCase()
     try {
       const details = {
         name: name,
         email: email,
         id: uid,
-        attendance_record: [],
+
       };
       await firestore()
         .collection('employees')

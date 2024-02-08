@@ -3,18 +3,16 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
-  ScrollView,
   Alert,
   Platform,
   KeyboardAvoidingView,
+  Linking,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import auth from '@react-native-firebase/auth';
 import {useNavigation} from '@react-navigation/native';
 import styles from '../SignUp/styles';
-import firestore from '@react-native-firebase/firestore';
-import { isDate } from 'date-fns';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
   const [email, setEmail] = useState(null);
@@ -27,11 +25,22 @@ const Login = () => {
         email,
         password,
       );
-      //  navigation.navigate("home")
-      const id = loginStatus.user.uid;
-      // console.log(id)
-      navigation.navigate('home',{uid:id});
-      
+
+      if (loginStatus) {
+        const id = loginStatus.user.uid;
+        navigation.navigate('home', {uid: id});
+      } else {
+        Alert.alert(
+          'Error',
+          'Email is already sended to your gmail while registration',
+          [
+            {
+              text: 'OK',
+              onPress: () => {},
+            },
+          ],
+        );
+      }
     } catch (error) {
       Alert.alert('Login Failed', error, [
         {

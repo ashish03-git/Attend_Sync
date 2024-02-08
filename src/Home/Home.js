@@ -14,15 +14,12 @@ import React, {useEffect, useState} from 'react';
 import styles from './style';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geolocation from '@react-native-community/geolocation';
-// import Geolocation, {
-//   getCurrentPosition,
-// } from 'react-native-geolocation-service';
 import geolib, {getDistance} from 'geolib';
 import {parse, compareAsc} from 'date-fns';
 import firestore, {firebase} from '@react-native-firebase/firestore';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import font from 'react-native-vector-icons/FontAwesome';
-// import firebase from "@react-native-firebase/database"
+import database from '@react-native-firebase/database';
 import {add_data} from '../Redux/userDataReducer';
 import {UseDispatch, useDispatch, useSelector} from 'react-redux';
 
@@ -31,6 +28,7 @@ const Home = () => {
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString(),
   );
+  const [todaysRecord, setTodaysRecord] = useState({});
   const [checkInTime, setCheckInTime] = useState('- - / - -');
   const [checkExitTime, setCheckExitTime] = useState('- - / - -');
   const [workHours, setWorkHours] = useState('- - / - -');
@@ -38,7 +36,7 @@ const Home = () => {
   const [checkDate, setCheckDate] = useState('');
   const [showThanks, setShowThanks] = useState(false);
   const [officeTime, setOfficeTime] = useState('10:30:00 am');
-  const [activityIndicator, setActivityIndicator] = useState(false);
+  const [activityIndicator, setActivityIndicator] = useState(true);
   const [officeCordinates, setOfficeCordinates] = useState({
     latitude: 22.71540662,
     longitude: 75.87396876,
@@ -83,15 +81,18 @@ const Home = () => {
   useEffect(() => {
     // AsyncStorage.clear();
     setDate(new Date().toDateString());
-    getStoredDate();
   }, [checkDate]);
 
   const getUserDetailsFromFirebase = async () => {
+    // setActivityIndicator(true);
+
     if (uid) {
       const data = await firestore().collection('employees').doc(uid).get();
       if (data.exists) {
         let uniqueUser = data.data();
+        
         dispatch(add_data(uniqueUser));
+        // console.log(uniqueUser)
         setUserDetails(uniqueUser);
       } else {
         Alert.alert('Something went wrong', 'No Data Available For This UID ', [
@@ -102,36 +103,46 @@ const Home = () => {
         ]);
       }
     }
-  };
 
-  const getStoredDate = async () => {
-    try {
-      const storedDate = await AsyncStorage.getItem('stored_date');
-      if (date === storedDate) {
-        await AsyncStorage.getItem('check_in').then(data => {
-          if (data) {
+    const storedDate = await AsyncStorage.getItem('stored_date');
+
+
+    if (date === storedDate) {
+      await database()
+        .ref(`employees/${uid}`)
+        .once('value')
+        .then(snapshot => {
+          const data = snapshot.val();
+          if (data?.checkIn?.check_in_status) {
             setToggle(false);
-            return setCheckInTime(data);
+            setShowThanks(false)
+            setCheckInTime(data?.checkIn?.check_in);
           }
-        });
-
-        await AsyncStorage.getItem('check_out').then(data => {
-          if (data) {
+          if (data?.checkOut?.check_out_status) {
             setShowThanks(true);
-            return setCheckExitTime(data);
+            setCheckExitTime(data?.checkOut?.check_out);
           }
-        });
-
-        await AsyncStorage.getItem('work_hours').then(data => {
-          if (data) {
-            setWorkHours(data);
+          if (data?.workHours?.work_hours_status) {
+            setWorkHours(data?.workHours?.work_hours);
           }
+           setActivityIndicator(false);
+        })
+        .catch(error => {
+          console.error('Error fetching data from Firebase:', error);
         });
-      }
-
-      setActivityIndicator(false);
-    } catch (err) {
-      console.log('Error retrieving stored date:', err);
+    } else {
+      await database()
+        .ref(`/employees/${uid}/`)
+        .set(null)
+        .then(() => {
+          console.log('Data cleared successfully.');
+        })
+        .catch(error => {
+          console.error('Error clearing data from Firebase:', error);
+        });
+        setToggle(true),
+        setShowThanks(false)
+        setActivityIndicator(false);
     }
   };
 
@@ -141,26 +152,29 @@ const Home = () => {
 
   const CheckIn = async () => {
     AsyncStorage.clear();
-
+    await AsyncStorage.setItem('stored_date', date);
     const distanceToOffice = getDistance(
       officeCordinates,
       usersCordinates,
       (accuracy = 4),
     );
-    // console.log(distanceToOffice);
-
     const maximumDistanceAllowed = 100;
-
     const currentTimeString = new Date().toLocaleTimeString([], {hour12: true});
     const currentTimeObject = parse(currentTimeString, 'h:mm:ss a', new Date());
     const officeTimeObject = parse(officeTime, 'h:mm:ss a', new Date());
     const comparisonResult = compareAsc(currentTimeObject, officeTimeObject);
-    // const comparisonResult = 0;
-    // console.log(comparisonResult)
+
+    await database()
+      .ref(`employees/${uid}/checkIn/`)
+      .set({
+        check_in: currentTime,
+        check_in_status: true,
+      })
+      .then(() => console.log('data stored in real time data base'));
 
     if (comparisonResult === 1 && distanceToOffice <= maximumDistanceAllowed) {
       AsyncStorage.setItem('check_in', currentTime);
-      AsyncStorage.setItem('stored_date', date);
+      // AsyncStorage.setItem('stored_date', date);
       setCheckInTime(currentTime);
       setToggle(!toggle);
     } else if (comparisonResult === -1) {
@@ -225,12 +239,13 @@ const Home = () => {
       const seconds = timeDifference % 60;
 
       setWorkHours(`${hours} : ${minutes}: ${seconds}`);
+      setShowThanks(true);
+
       await AsyncStorage.setItem(
         'work_hours',
         `${hours} : ${minutes} : ${seconds}`,
       );
 
-      setShowThanks(true);
       await AddValueInFireStore(
         date,
         checkInTime,
@@ -238,7 +253,7 @@ const Home = () => {
         `${hours} : ${minutes}: ${seconds}`,
       );
     } catch (err) {
-      Alert.alert(err, 'please contact your administrator', [
+      Alert.alert(JSON.stringify(err), 'please contact your administrator', [
         {
           text: 'OK',
           onPress: () => {},
@@ -253,6 +268,13 @@ const Home = () => {
     checkExitTime,
     workHours,
   ) => {
+    await database()
+      .ref(`employees/${uid}/checkOut/`)
+      .set({check_out: checkExitTime, check_out_status: true});
+    await database()
+      .ref(`employees/${uid}/workHours/`)
+      .set({work_hours: workHours, work_hours_status: true});
+
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate
@@ -265,6 +287,7 @@ const Home = () => {
       check_out: checkExitTime,
       work_hours: workHours,
     };
+
     await // Update the attendance record
     firestore()
       .collection('employees')
@@ -273,7 +296,9 @@ const Home = () => {
         [`attendance_records.${currentYear}.${currentMonth}`]:
           firebase.firestore.FieldValue.arrayUnion(payload),
       })
-      .then(() => console.log('Data added to firestore'))
+      .then(() => {
+        console.log('stored all the data ');
+      })
       .catch(error =>
         console.error('Error updating attendance record:', error),
       );
@@ -282,12 +307,9 @@ const Home = () => {
   return (
     <>
       {activityIndicator ? (
-        <>
-          <View
-            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <ActivityIndicator size="large" />
-          </View>
-        </>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" />
+        </View>
       ) : (
         <View style={styles.container}>
           {/* welcome container  */}
