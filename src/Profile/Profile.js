@@ -12,62 +12,53 @@ import {useNavigation} from '@react-navigation/native';
 import firestore, {firebase} from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import Font from 'react-native-vector-icons/FontAwesome';
+import LogOut from 'react-native-vector-icons/AntDesign';
 import DropDownPicker from 'react-native-dropdown-picker';
+import {useSelector} from 'react-redux';
+import useGetAttenanceRecord from '../Hook/useGetAttenanceRecord';
+import Font5 from 'react-native-vector-icons/FontAwesome5';
 const Profile = () => {
   const navigation = useNavigation();
   const handleLogOut = async () => {
     await firebase.auth().signOut();
+    navigation.navigate('login');
   };
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(null);
+  const [msg, setMsg] = useState('');
+
   const uid = 'KROwXP2g9peVWDIoqRucTQnI60A3';
-  const [attendance_record, setAttendance_Record] = useState([]);
-  const [items, setItems] = useState([
-    {label: 'January', value: 'Jan'},
-    {label: 'February', value: 'Feb'},
-    {label: 'March', value: 'Mar'},
-    {label: 'April', value: 'Apr'},
-    {label: 'May', value: 'May'},
-    {label: 'June', value: 'Jun'},
-    {label: 'July', value: 'Jul'},
-    {label: 'August', value: 'Aug'},
-    {label: 'September', value: 'Sep'},
-    {label: 'October', value: 'Oct'},
-    {label: 'November', value: 'Nov'},
-    {label: 'December', value: 'Dec'},
-  ]);
+  const [users_attendance_record, setUsers_attendance_record] = useState([]);
+  const storedReduxUserDataID = useSelector(state => state.user_data.data.id);
 
-  useEffect(() => {
-    fetchAttendanceRecords();
-  }, []);
-
-  const fetchAttendanceRecords = async () => {
-    let allData = await firestore().collection('employees').doc(uid).get();
-    let data = allData.data();
-    setAttendance_Record(data.attendance_record);
-    // await console.log(attendance_record)
-  };
+  const data = useGetAttenanceRecord(storedReduxUserDataID);
+  setTimeout(() => {
+    if (typeof data === 'object') {
+      setUsers_attendance_record(data);
+    } else {
+      setMsg(data);
+    }
+  }, 100);
 
   return (
     <Animated.View enter style={styles.container}>
-      <View style={styles.containerTop}>
-        <View
-          style={{
-            // flex: 2,
-            alignSelf: 'flex-end',
-            paddingHorizontal: 10,
-          }}>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('showAllMonthsData', {
-                attendance_record: attendance_record,
-              })
-            }>
-            <Text style={{color: 'blue', fontSize: 18}}>
-              All Records {`>>`}
-            </Text>
+      <View style={styles.headerContainer}>
+        <View style={{flex: 1, flexDirection: 'row'}}>
+          <Font5
+            name="arrow-left"
+            onPress={() => navigation.goBack()}
+            size={22}
+            color="black"
+          />
+          <Text style={styles.headerTxt}>Profile</Text>
+        </View>
+        <View style={{flex: 1, alignItems: 'flex-end'}}>
+          <TouchableOpacity onPress={handleLogOut} style={styles.logOutBtn}>
+            {/* <Text style={styles.viewListTxt}>Log Out</Text> */}
+            <LogOut name="logout" size={30} color={"white"}/>
           </TouchableOpacity>
         </View>
+      </View>
+
+      <View style={styles.containerTop}>
         <View style={styles.profileImage}>
           <Image
             source={{
@@ -76,7 +67,7 @@ const Profile = () => {
             style={{flex: 1}}
           />
         </View>
-        <View style={{paddingTop: 20, alignItems: 'center'}}>
+        <View style={{alignItems: 'center'}}>
           <Text style={{fontSize: 26, fontWeight: '500', margin: 5}}>
             Ashish
           </Text>
@@ -93,82 +84,71 @@ const Profile = () => {
             paddingHorizontal: 10,
             marginBottom: 10,
           }}>
-          {/* <View
-            style={{
-              flex: 1,
-            }}>
-            <DropDownPicker
-              placeholder="Select Month"
-              style={{width: '40%', alignSelf: 'flex-end'}}
-              open={open}
-              value={value}
-              items={items}
-              setOpen={setOpen}
-              setValue={setValue}
-              setItems={setItems}
-              dropDownDirection="BOTTOM"
-              dropDownContainerStyle={{
-                width: '40%',
-                alignSelf: 'flex-end',
-                zIndex: 10,
-                position: 'absolute',
-              }}
-            />
-          </View> */}
-
           <View
             style={{
               flex: 2,
               marginVertical: 5,
             }}>
             <Text style={{color: 'black', fontSize: 18, fontWeight: '600'}}>
-              Attendance Record Of Current Month:
+              Current Month Records:
             </Text>
           </View>
         </View>
 
         <View style={styles.listContainer}>
-          <FlatList
-            showsVerticalScrollIndicator={false}
-            data={attendance_record}
-            renderItem={({item}) => {
-              return (
-                <View style={styles.listItemContainer}>
-                  <View style={styles.dateEmptyContainer}>
-                    <View style={styles.itemDateContainer}>
-                      <Text style={styles.itemDatetxt}>Date : {item.date}</Text>
+          {users_attendance_record !== null &&
+          users_attendance_record.length > 0 ? (
+            <>
+              <FlatList
+                showsVerticalScrollIndicator={false}
+                data={users_attendance_record}
+                renderItem={({item}) => {
+                  return (
+                    <View style={styles.listItemContainer}>
+                      <View style={styles.dateEmptyContainer}>
+                        <View style={styles.itemDateContainer}>
+                          <Text style={styles.itemDatetxt}>
+                            Date : {item.date}
+                          </Text>
+                        </View>
+                        <View style={{flex: 1}}></View>
+                      </View>
+                      <View style={styles.attendanceDetails}>
+                        <Text style={{fontSize: 16, color: 'black'}}>
+                          In:{' '}
+                          <Text style={styles.entyTxt}>{item.check_in}</Text>{' '}
+                        </Text>
+                        <Text style={styles.seperator}>|</Text>
+                        <Text style={{fontSize: 16, color: 'black'}}>
+                          Out:
+                          <Text style={styles.exitTxt}> {item.check_out}</Text>
+                        </Text>
+                        <Text style={styles.seperator}>|</Text>
+                        <Text style={{fontSize: 16, color: 'black'}}>
+                          Time:{' '}
+                          <Text style={styles.workTxt}>
+                            {item.work_hours} hr
+                          </Text>
+                        </Text>
+                      </View>
                     </View>
-                    <View style={{flex: 1}}></View>
-                  </View>
-                  <View style={styles.attendanceDetails}>
-                    <Text style={{fontSize: 16, color: 'black'}}>
-                      Intry: <Text style={styles.entyTxt}>{item.check_in}</Text>{' '}
-                    </Text>
-                    <Text style={styles.seperator}>|</Text>
-                    <Text style={{fontSize: 16, color: 'black'}}>
-                      Exit:<Text style={styles.exitTxt}> {item.check_out}</Text>
-                    </Text>
-                    <Text style={styles.seperator}>|</Text>
-                    <Text style={{fontSize: 16, color: 'black'}}>
-                      Work Hr:{' '}
-                      <Text style={styles.workTxt}>{item.work_hours} hr</Text>
-                    </Text>
-                  </View>
-                </View>
-              );
-            }}
-          />
+                  );
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <Text style={styles.noDataTxt}>{msg}</Text>
+            </>
+          )}
         </View>
       </View>
 
       <View style={styles.btnContainer}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}>
-          <Text style={styles.backBtnTxt}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleLogOut} style={styles.viewList}>
-          <Text style={styles.viewListTxt}>Log Out</Text>
+          onPress={() => navigation.navigate('showAllMonthsData')}
+          style={styles.viewList}>
+          <Text style={styles.backBtnTxt}>View All {'>>'}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>

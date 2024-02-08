@@ -14,7 +14,8 @@ const useCollectionLength = () => {
         // console.log(length)
         setCollectionLength(length);
       } catch (error) {
-        console.error('Error fetching collection length:', error);
+        // console.error('Error fetching collection length:', error);
+        return 'Error fetching collection length:', error
       }
     };
     fetchCollectionLength();

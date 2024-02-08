@@ -1,4 +1,16 @@
 import {StyleSheet} from 'react-native';
+import {Dimensions} from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+
+// You can adjust these factors as needed to fit your layout requirements
+const widthFactor = 1; // 80% of the screen width
+const heightFactor = 0.1; // 40% of the screen height
+
+const width = screenWidth * widthFactor;
+const height = screenHeight * heightFactor;
+// console.log(width," ",height)
 
 const styles = StyleSheet.create({
   container: {
@@ -18,14 +30,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   filerData: {
-    flex: 1,
+    flex: 2,
     flexDirection: 'row',
-    // justifyContent: 'space-between',
+    justifyContent:"center",
     alignItems: 'center',
     // backgroundColor: 'yellow',
     paddingHorizontal: 10,
   },
-
   viewList: {
     width: 160,
     height: 50,
@@ -49,9 +60,10 @@ const styles = StyleSheet.create({
   },
   listItemContainer: {
     // flexDirection: 'row',
-    width: 370,
-    height: 80,
+    width: width - 10,
+    height: height,
     marginVertical: 12,
+    marginHorizontal: 2,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'green',

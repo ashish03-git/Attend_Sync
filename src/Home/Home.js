@@ -23,6 +23,8 @@ import firestore, {firebase} from '@react-native-firebase/firestore';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import font from 'react-native-vector-icons/FontAwesome';
 // import firebase from "@react-native-firebase/database"
+import {add_data} from '../Redux/userDataReducer';
+import {UseDispatch, useDispatch, useSelector} from 'react-redux';
 
 const Home = () => {
   const [toggle, setToggle] = useState(true);
@@ -44,9 +46,10 @@ const Home = () => {
   const navigation = useNavigation();
   const [usersCordinates, setUsersCordinates] = useState({});
   const route = useRoute();
-  // const uid = route.params.uid;
-  const uid = 'KROwXP2g9peVWDIoqRucTQnI60A3';
+  const uid = route.params.uid;
+  const storedReduxUserData = useSelector(state => state.user_data.data);
   const [userDetails, setUserDetails] = useState({});
+  const dispatch = useDispatch();
 
   const getCurrentLocation = async () => {
     Geolocation.getCurrentPosition(
@@ -71,7 +74,7 @@ const Home = () => {
     // Remember to clear the watch when it's no longer needed, for example, when the component unmounts
     // You can clear the watch using Geolocation.clearWatch(watchId)
   };
-  
+
   useEffect(() => {
     getCurrentLocation();
     getUserDetailsFromFirebase();
@@ -88,6 +91,7 @@ const Home = () => {
       const data = await firestore().collection('employees').doc(uid).get();
       if (data.exists) {
         let uniqueUser = data.data();
+        dispatch(add_data(uniqueUser));
         setUserDetails(uniqueUser);
       } else {
         Alert.alert('Something went wrong', 'No Data Available For This UID ', [
@@ -135,23 +139,10 @@ const Home = () => {
     setCurrentTime(new Date().toLocaleTimeString());
   }, 1000);
 
-  const showAlert = message => {
-    Alert.alert(
-      'Something went wrong',
-      <Text style={{fontWeight: 'bold'}}>{message}</Text>,
-      [
-        {
-          text: 'OK',
-          onPress: () => {},
-        },
-      ],
-    );
-  };
-
   const CheckIn = async () => {
     AsyncStorage.clear();
 
-    const distanceToOffice = await getDistance(
+    const distanceToOffice = getDistance(
       officeCordinates,
       usersCordinates,
       (accuracy = 4),
@@ -164,6 +155,8 @@ const Home = () => {
     const currentTimeObject = parse(currentTimeString, 'h:mm:ss a', new Date());
     const officeTimeObject = parse(officeTime, 'h:mm:ss a', new Date());
     const comparisonResult = compareAsc(currentTimeObject, officeTimeObject);
+    // const comparisonResult = 0;
+    // console.log(comparisonResult)
 
     if (comparisonResult === 1 && distanceToOffice <= maximumDistanceAllowed) {
       AsyncStorage.setItem('check_in', currentTime);
@@ -171,9 +164,34 @@ const Home = () => {
       setCheckInTime(currentTime);
       setToggle(!toggle);
     } else if (comparisonResult === -1) {
-      showAlert(`Please check in after ${officeTime}`);
+      Alert.alert(
+        'something went wrong',
+        `please check in after ${officeTime}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {},
+          },
+        ],
+      );
+    } else if (distanceToOffice > maximumDistanceAllowed) {
+      Alert.alert(
+        'something went wrong',
+        `You are ${distanceToOffice} meters away from the office`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {},
+          },
+        ],
+      );
     } else {
-      showAlert(`You are ${distanceToOffice} meters away from the office`);
+      Alert.alert('something went wrong', 'please check in again', [
+        {
+          text: 'retry',
+          onPress: CheckIn,
+        },
+      ]);
     }
   };
 
@@ -235,19 +253,30 @@ const Home = () => {
     checkExitTime,
     workHours,
   ) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate
+      .toLocaleString('default', {month: 'long'})
+      .toLowerCase();
+
     let payload = {
       date: date,
       check_in: checkInTime,
       check_out: checkExitTime,
       work_hours: workHours,
     };
-    await firestore()
+    await // Update the attendance record
+    firestore()
       .collection('employees')
       .doc(uid)
       .update({
-        attendance_record: firebase.firestore.FieldValue.arrayUnion(payload),
+        [`attendance_records.${currentYear}.${currentMonth}`]:
+          firebase.firestore.FieldValue.arrayUnion(payload),
       })
-      .then(() => console.log('data added to firestore'));
+      .then(() => console.log('Data added to firestore'))
+      .catch(error =>
+        console.error('Error updating attendance record:', error),
+      );
   };
 
   return (
