@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     // backgroundColor: 'green',
   },
   headerTxt: {
-    fontSize: 20,
+    fontSize: 24,
     marginHorizontal: 15,
     color: 'black',
     fontWeight: '500',
@@ -46,14 +46,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
-  logOutBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // logOutBtn: {
+  //   width: 100,
+  //   height: 28,
+  //   borderRadius: 18,
+  //   backgroundColor: 'red',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
   backBtnTxt: {
     fontSize: 16,
     color: 'white',
@@ -71,10 +71,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   viewList: {
-    width: 140,
-    height: 50,
-    borderRadius: 30,
-    backgroundColor: '#0B3F70',
+    width: 70,
+    height: 70,
+    borderRadius: 40,
+    flexDirection:"row",
+    backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -88,6 +89,7 @@ const styles = StyleSheet.create({
   },
   containerBottom: {
     flex: 7,
+    padding:10,
   },
   listContainer: {
     flex: 4,

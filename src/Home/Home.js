@@ -90,7 +90,7 @@ const Home = () => {
       const data = await firestore().collection('employees').doc(uid).get();
       if (data.exists) {
         let uniqueUser = data.data();
-        
+
         dispatch(add_data(uniqueUser));
         // console.log(uniqueUser)
         setUserDetails(uniqueUser);
@@ -103,9 +103,7 @@ const Home = () => {
         ]);
       }
     }
-
     const storedDate = await AsyncStorage.getItem('stored_date');
-
 
     if (date === storedDate) {
       await database()
@@ -115,7 +113,7 @@ const Home = () => {
           const data = snapshot.val();
           if (data?.checkIn?.check_in_status) {
             setToggle(false);
-            setShowThanks(false)
+            setShowThanks(false);
             setCheckInTime(data?.checkIn?.check_in);
           }
           if (data?.checkOut?.check_out_status) {
@@ -125,7 +123,7 @@ const Home = () => {
           if (data?.workHours?.work_hours_status) {
             setWorkHours(data?.workHours?.work_hours);
           }
-           setActivityIndicator(false);
+          setActivityIndicator(false);
         })
         .catch(error => {
           console.error('Error fetching data from Firebase:', error);
@@ -140,9 +138,8 @@ const Home = () => {
         .catch(error => {
           console.error('Error clearing data from Firebase:', error);
         });
-        setToggle(true),
-        setShowThanks(false)
-        setActivityIndicator(false);
+      setToggle(true), setShowThanks(false);
+      setActivityIndicator(false);
     }
   };
 
@@ -164,17 +161,14 @@ const Home = () => {
     const officeTimeObject = parse(officeTime, 'h:mm:ss a', new Date());
     const comparisonResult = compareAsc(currentTimeObject, officeTimeObject);
 
-    await database()
-      .ref(`employees/${uid}/checkIn/`)
-      .set({
-        check_in: currentTime,
-        check_in_status: true,
-      })
-      .then(() => console.log('data stored in real time data base'));
-
     if (comparisonResult === 1 && distanceToOffice <= maximumDistanceAllowed) {
-      AsyncStorage.setItem('check_in', currentTime);
-      // AsyncStorage.setItem('stored_date', date);
+      await database()
+        .ref(`employees/${uid}/checkIn/`)
+        .set({
+          check_in: currentTime,
+          check_in_status: true,
+        })
+        .then(() => console.log('data stored in real time data base'));
       setCheckInTime(currentTime);
       setToggle(!toggle);
     } else if (comparisonResult === -1) {
@@ -288,7 +282,7 @@ const Home = () => {
       work_hours: workHours,
     };
 
-    await // Update the attendance record
+    await 
     firestore()
       .collection('employees')
       .doc(uid)

@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    flex: 1,
+    flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   filerData: {
-    flex: 2,
+    flex: 4,
     flexDirection: 'row',
     justifyContent:"center",
     alignItems: 'center',
@@ -51,11 +51,12 @@ const styles = StyleSheet.create({
     // fontWeight: '500',
   },
   containerBottom: {
-    flex: 5,
+    flex: 2,
   },
   listContainer: {
     flex: 10,
-    alignItems: 'center',
+    // alignItems: 'center',
+    padding:10,
     justifyContent: 'center',
   },
   listItemContainer: {
